@@ -45,7 +45,7 @@ export const loginUserService = async ({ userId, password, user_id }: any) => {
   const {password : userpass, ...rest} = user
   const tokenPayload = JSON.parse(JSON.stringify({...rest}))
 
-  const token = jwt.sign(tokenPayload, process.env.JWT_SECRET || "fallback_secret_key", { expiresIn: "1h" });
+  const token = jwt.sign(tokenPayload, process.env.JWT_SECRET || "fallback_secret_key", { expiresIn: "1d" });
 
   return {
     message: "Login successful",
