@@ -13,8 +13,6 @@ export const validate =
       });
       
       req.body = result.body;
-      // req.query and req.params might be read-only in some environments
-      // We specificially need req.body update for Date transformation
       
       next();
     } catch (error) {
