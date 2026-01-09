@@ -20,7 +20,6 @@ export const loginUserService = async ({ userId, password, user_id }: any) => {
      throw new AppError("Invalid User ID format", 400);
   }
 
-  // 1️⃣ Find user from users table
   const user = await prisma.user.findUnique({
     where: { user_id: loginId },
   });

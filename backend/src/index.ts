@@ -6,6 +6,7 @@ import studentRouter from "./routes/student.router";
 import warningRouter from "./routes/warning.router";
 import "dotenv/config";
 import taskRouter from "./routes/task.router";
+import notificationRouter from "./routes/notification.router";
 import "dotenv/config"; 
 import cors from "cors";
 
@@ -22,6 +23,7 @@ app.use("/warnings", warningRouter);
 app.use('/auth', authRouter);
 app.use('/mentors', mentorRouter);
 app.use('/tasks', taskRouter);
+app.use('/notifications', notificationRouter);
 
 
 app.use(globalErrorHandler);

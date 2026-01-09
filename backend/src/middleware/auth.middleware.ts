@@ -24,3 +24,15 @@ export const protect = async (req: AuthRequest, res: Response, next: NextFunctio
     return next(new AppError("Invalid or expired token", 401));
   }
 };
+
+export const restrictTo = (...roles: string[]) => {
+  return (req: AuthRequest, res: Response, next: NextFunction) => {
+    // roles ['admin', 'lead-guide']. role='user'
+    if (!roles.includes(req.user.role)) {
+      return next(
+        new AppError("You do not have permission to perform this action", 403)
+      );
+    }
+    next();
+  };
+};
