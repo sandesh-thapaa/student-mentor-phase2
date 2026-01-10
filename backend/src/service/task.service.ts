@@ -99,3 +99,25 @@ export const reviewTaskService = async (mentorId: string, taskId: string, data: 
 
   return updatedAssignment;
 };
+
+export const getAllTasksForMentorService = async (mentorId: string) => {
+  const tasks = await prisma.task.findMany({
+    where: {
+      course: {
+        mentor_id: mentorId,
+      },
+    },
+    include: {
+      course: {
+        select: {
+          title: true,
+        },
+      },
+    },
+    orderBy: {
+      createdAt: 'desc',
+    },
+  });
+
+  return tasks;
+};

@@ -70,3 +70,23 @@ export const reviewTask = async (req: AuthRequest, res: Response, next: NextFunc
         next(new AppError(error.message || 'Failed to review task', error.statusCode || 500));
     }
 };
+
+export const getAllTasks = async (req: AuthRequest, res: Response, next: NextFunction) => {
+    try {
+        const userId = req.user?.user_id;
+
+        if (!userId) {
+             throw new AppError("User not authenticated", 401);
+        }
+
+        if (req.user.role !== 'MENTOR') {
+             throw new AppError("Access denied. Mentors only.", 403);
+        }
+
+        const tasks = await taskService.getAllTasksForMentorService(userId);
+        res.status(200).json(tasks);
+
+    } catch (error: any) {
+        next(new AppError(error.message || 'Failed to fetch tasks', error.statusCode || 500));
+    }
+};
