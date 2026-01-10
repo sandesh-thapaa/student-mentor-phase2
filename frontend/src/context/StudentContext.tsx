@@ -23,7 +23,7 @@ type StudentContextType = {
     tasks: StudentAssignment[] | null;
     dashboard: StudentDashboard | null;
     progressReport: TaskStatsResponse | null;
-    warning: WarningsResponse[] | null;
+    warning: WarningsResponse | null;
     notifications: Notification[] | null;
     loading: boolean;
     studentDashboard: () => Promise<void>;
@@ -46,7 +46,7 @@ export const StudentProvider = ({ children }: { children: ReactNode }) => {
     const [dashboard, setDashboard] = useState<StudentDashboard | null>(null);
     const [tasks, setTasks] = useState<StudentAssignment[] | null>(null);
     const [progressReport, setProgressReport] = useState<TaskStatsResponse | null>(null);
-    const [warning, setWarning] = useState<WarningsResponse[] | null>(null);
+    const [warning, setWarning] = useState<WarningsResponse | null>(null);
     const [notifications, setNotifications] = useState<Notification[] | null>(null);
     const [loading, setLoading] = useState<boolean>(false);
 

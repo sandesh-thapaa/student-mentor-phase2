@@ -209,7 +209,8 @@ const TaskRow = ({ task }: { task: Task }) => {
 
         <div>
           <h3 className="font-semibold text-gray-900">{task.title}</h3>
-          <p className="text-sm text-gray-500">Task ID: {task.course_id}</p>
+          <p className="text-sm text-gray-500">Task ID: {task.task_id}</p>
+
         </div>
       </div>
 

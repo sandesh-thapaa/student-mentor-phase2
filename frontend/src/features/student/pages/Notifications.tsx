@@ -7,12 +7,11 @@ import {
   CheckCircle,
   SlidersHorizontal,
 } from 'lucide-react';
-import { useStudent } from '../../../context/StudentContext';
 
 const Notifications: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'all' | 'unread' | 'mentions' | 'system'>('all');
 
-  const {notifications} = useStudent()
+  
 
   return (
     <div className="bg-gray-50 p-4 sm:p-6 lg:p-8">

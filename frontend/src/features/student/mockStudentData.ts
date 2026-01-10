@@ -1,7 +1,6 @@
-//it is an mock file for testing frontend
+// src/features/student/mockStudentData.ts
 
-import type { Student, Notification } from "./types";
-import type { Warning } from "./pages/Warnings";
+import type { Student, Notification, Warning } from "./types";
 
 export const mockStudent: Student = {
   id: "26STD001",
@@ -14,50 +13,37 @@ export const mockStudent: Student = {
   liveClassUrl: "https://course-url.com/meet/xyz-abc",
   mentor: {
     name: "Sarah Connor",
-    expertise: "Senoir Dev",
+    expertise: "Senior Dev",
     email: "mentor@example.com",
     discordLink: "https://discord.gg/example",
   },
-  tasks:[
-    {task_id:1, title: "HTML Basics", status: "completed", deadline: "2026-01-10"},
-    {task_id:2, title: "CSS Styling", status: "in_progress", deadline: "2026-01-15"},
-    {task_id:3, title: "Responsive Layouts", status: "pending", deadline: "2026-01-20"},
-  ]
+  tasks: [
+    { task_id: 1, title: "HTML Basics", status: "completed", deadline: "2026-01-10" },
+    { task_id: 2, title: "CSS Styling", status: "in_progress", deadline: "2026-01-15" },
+    { task_id: 3, title: "Responsive Layouts", status: "pending", deadline: "2026-01-20" },
+  ],
 };
-
-
 
 export const mockWarnings: Warning[] = [
   {
-    id: 1,
+    id: "1",
     title: "Consecutive Missed Deadlines",
-    message:
-      "You have missed submission deadlines for multiple tasks. Please submit pending work or contact your mentor.",
-    level: "High",
-    date: "Oct 24, 2023",
-    mentor: "Sarah Connor",
-    status: "active",
+    remark: "You have missed multiple task deadlines.",
+    level: "HIGH",
+    status: "ACTIVE",
+    createdAt: "2023-10-24",
+    mentor: { name: "Sarah Connor" },
   },
   {
-    id: 2,
+    id: "2",
     title: "Low Attendance",
-    message: "You missed 3 consecutive live sessions.",
-    level: "Medium",
-    date: "Sept 12, 2023",
-    mentor: "John Smith",
-    status: "resolved",
-  },
-  {
-    id: 3,
-    title: "Late Submission",
-    message: "HTML Basics task was submitted late.",
-    level: "Low",
-    date: "July 20, 2023",
-    mentor: "Sarah Connor",
-    status: "resolved",
+    remark: "You missed 3 consecutive live sessions.",
+    level: "MEDIUM",
+    status: "RESOLVED",
+    createdAt: "2023-09-12",
+    mentor: { name: "John Smith" },
   },
 ];
-
 
 export const mockNotifications: Notification[] = [
   {
@@ -79,4 +65,3 @@ export const mockNotifications: Notification[] = [
     date: "2026-01-04",
   },
 ];
-

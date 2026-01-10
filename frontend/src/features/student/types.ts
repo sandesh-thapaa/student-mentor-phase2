@@ -1,6 +1,6 @@
 // src/features/student/types.ts
 
-// src/features/student/types.ts
+/* ---------------- TASKS ---------------- */
 
 export type TaskStatus = "completed" | "in_progress" | "pending";
 
@@ -8,16 +8,18 @@ export interface Task {
   task_id: number;
   title: string;
   status: TaskStatus;
-  description?: string; // optional, for task details
-  requirements?: string[]; // optional
-  deadline?: string; // optional
+  description?: string;
+  requirements?: string[];
+  deadline?: string;
 }
+
+/* ---------------- STUDENT ---------------- */
 
 export interface Student {
   id: string;
   name: string;
   email: string;
-  photo: string; // profile image
+  photo: string;
   progress: number;
   courseName: string;
   courseUrl: string;
@@ -28,28 +30,33 @@ export interface Student {
     discordLink: string;
     expertise: string;
   };
-  tasks: Task[]; // all tasks for progress
+  tasks: Task[];
 }
 
+/* ---------------- WARNINGS (BACKEND ALIGNED) ---------------- */
 
-export type WarningType =
-  | "deadline_near"
-  | "deadline_exceeded"
-  | "task_rejected"
-  | "general";
+export type WarningLevel = "LOW" | "MEDIUM" | "HIGH" | "CRITICAL";
+export type WarningStatus = "ACTIVE" | "RESOLVED";
 
-export type Warning = {
-  id: number;
-  taskTitle: string;
-  message: string;
-  type: WarningType;
-  issuedAt: string;
-};
+export interface Warning {
+  id: string;
+  title: string;
+  remark: string;
+  level: WarningLevel;
+  status: WarningStatus;
+  createdAt: string;
+  mentor: {
+    name: string;
+  };
+}
+
+/* ---------------- NOTIFICATIONS ---------------- */
 
 export type NotificationType = "info" | "warning" | "success";
+
 export interface Notification {
   id: number;
   message: string;
   type: NotificationType;
   date: string;
-};
+}
