@@ -111,6 +111,13 @@ export const getStudentTasksService = async (studentId: string) => {
             select: {
               course_id: true,
               title: true,
+              url: true,
+              mentor_id: true,
+              mentor: {
+                select: {
+                  name: true
+                }
+              }
             },
           },
         },
