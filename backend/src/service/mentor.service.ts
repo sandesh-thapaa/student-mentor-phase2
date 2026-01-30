@@ -206,3 +206,105 @@ export const updateStudentService = async (mentorId: string, studentId: string, 
 
   return updatedStudent;
 };
+
+export const deleteStudentService = async (mentorId: string, studentId: string) => {
+  // Verify student is assigned to mentor
+  const relation = await prisma.mentorStudent.findUnique({
+    where: {
+      mentor_id_student_id: {
+        mentor_id: mentorId,
+        student_id: studentId
+      }
+    }
+  });
+
+  if (!relation) {
+    throw new AppError("Student is not assigned to you or does not exist", 403);
+  }
+
+  // Delete the User record (cascades to Student and MentorStudent)
+  await prisma.user.delete({
+    where: { user_id: studentId }
+  });
+
+  return { message: "Student deleted successfully" };
+};
+
+export const getMentorAssignmentsService = async (mentorId: string) => {
+  // Fetch assignments for tasks that belong to courses created by this mentor
+  const assignments = await prisma.taskAssignment.findMany({
+    where: {
+      task: {
+        course: {
+          mentor_id: mentorId
+        }
+      }
+    },
+    include: {
+      student: {
+        select: {
+          student_id: true,
+          name: true,
+          photo: true
+        }
+      },
+      task: {
+        select: {
+          task_id: true,
+          title: true,
+          course: {
+            select: {
+              title: true
+            }
+          }
+        }
+      }
+    },
+    orderBy: {
+      submittedAt: 'desc'
+    }
+  });
+
+  return assignments;
+};
+
+export const reviewAssignmentService = async (mentorId: string, assignmentId: string, data: { status: string, remark: string }) => {
+  const { status, remark } = data;
+
+  // Validate status enum
+  const validStatuses = ["APPROVED", "REJECTED"];
+  if (!validStatuses.includes(status)) {
+    throw new AppError("Invalid status. Allowed: APPROVED, REJECTED", 400);
+  }
+
+  // Verify assignment exists and belongs to a task created by this mentor
+  const assignment = await prisma.taskAssignment.findUnique({
+    where: { id: assignmentId },
+    include: {
+      task: {
+        include: {
+          course: true
+        }
+      }
+    }
+  });
+
+  if (!assignment) {
+    throw new AppError("Assignment not found", 404);
+  }
+
+  if (assignment.task.course.mentor_id !== mentorId) {
+    throw new AppError("You can only review assignments for your own courses", 403);
+  }
+
+  const updatedAssignment = await prisma.taskAssignment.update({
+    where: { id: assignmentId },
+    data: {
+      status: status as any, // Cast to any or TaskStatus enum if imported
+      mentor_remark: remark,
+      reviewedAt: new Date()
+    }
+  });
+
+  return updatedAssignment;
+};
