@@ -1,4 +1,4 @@
-import { FC } from "react";
+import type { FC } from "react";
 import {
   LayoutDashboard,
   GraduationCap,
@@ -60,7 +60,6 @@ const Sidebar: FC<SidebarProps> = ({ isSidebarOpen, setIsSidebarOpen }) => {
       path: "/mentor/reviews", 
       badge: 2 
     },
-    { icon: MessageSquare, label: "Messages", path: "/mentor/messages" },
     {
       icon: Bell,
       label: "Notifications",

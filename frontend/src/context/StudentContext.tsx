@@ -54,6 +54,8 @@ const StudentContext = createContext<StudentContextType | undefined>(undefined);
 
 /* ------------------ Provider ------------------ */
 
+import { useAuth } from "./AuthContext";
+
 export const StudentProvider = ({ children }: { children: ReactNode }) => {
   const [dashboard, setDashboard] = useState<StudentDashboard | null>(null);
   const [tasks, setTasks] = useState<StudentAssignment[] | null>(null);
@@ -64,6 +66,7 @@ export const StudentProvider = ({ children }: { children: ReactNode }) => {
     null
   );
   const [loading, setLoading] = useState<boolean>(false);
+  const { authUser } = useAuth();
 
   const studentDashboard = async () => {
     setLoading(true);
@@ -167,13 +170,15 @@ export const StudentProvider = ({ children }: { children: ReactNode }) => {
   };
 
   useEffect(() => {
-    studentDashboard();
-    fetchTasks();
-    fetchProgressReport();
-    fetchStudentWarnings();
-    fetchNotifications();
-  }, []);
-
+    if (authUser) {
+      studentDashboard();
+      fetchTasks();
+      fetchProgressReport();
+      fetchStudentWarnings();
+      fetchNotifications();
+    }
+  }, [authUser]);
+  
   const unreadCount =
     notifications?.filter((n) => !(n.isRead === true || !!n.readAt)).length ||
     0;
