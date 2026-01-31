@@ -10,6 +10,7 @@ export interface TaskStats {
   export interface Course {
     course_id: string;
     title: string;
+    url?: string;
   }
   
   export interface CoursesResponse {
@@ -18,7 +19,7 @@ export interface TaskStats {
   
   
   export interface TaskStatsResponse {
-    courses: CoursesResponse;
+    courses: Course[];
     taskStats: TaskStats;
     completionPercentage: number;
   }

@@ -23,19 +23,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   });
 
 
-//   useEffect(() => {
-//   // 🔴 TEMPORARY DEV LOGIN (REMOVE LATER)
-//   if (!authUser) {
-//     setAuthUser({
-//       id: "26STD0001", 
-//       role: "STUDENT",
-//       token: "dev-token",
-//     });
-    
-//   }
-// }, []);
-
-
 
   useEffect(() => {
     if (authUser) {

@@ -1,12 +1,20 @@
+export interface SocialLinks {
+  github?: string;
+  twitter?: string;
+  linkedin?: string;
+}
+
 export interface Student {
-    student_id: string;
-    name: string;
-    photo: string | null;
-    social_links: string | null;
-    progress: number;
-    warning_count: number;
-    warning_status: "ACTIVE" | "INACTIVE"; // if there can be other statuses, adjust
-  }
+  student_id: string;
+  name: string;
+  photo: string | null;
+  social_links: SocialLinks | null;
+  progress: number;
+  warning_count: number;
+  warning_status: string | null;
+  enrolled_course?: string; 
+  meeting_link?: string;  
+}
   
   export interface Stats {
     totalTasks: number;
@@ -40,6 +48,7 @@ export interface Student {
 export interface Course {
   course_id: string;
   title: string;
+  url?: string;
 }
 
 // Task Type

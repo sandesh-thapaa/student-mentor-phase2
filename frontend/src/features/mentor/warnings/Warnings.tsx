@@ -1,24 +1,80 @@
-import { useState } from 'react';
-import { AlertCircle, HelpCircle, ChevronDown } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { HelpCircle, Loader2 } from 'lucide-react';
+import { useMentor } from '../../../context/MentorContext';
+import { issueWarning, getStudentWarnings } from '../../../api/warningApi';
+import { type Warning, WarningLevel, WarningStatus, type Student } from '../types';
+import WarningForm from './components/WarningForm';
+import toast from 'react-hot-toast';
 
 const Warnings = () => {
-  
-  const [selectedStudent, setSelectedStudent] = useState('');
-  const [severity, setSeverity] = useState('');
+  const { students } = useMentor();
+  const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
+  const [severity, setSeverity] = useState<WarningLevel>(WarningLevel.LOW);
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [isStudentDropdownOpen, setIsStudentDropdownOpen] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [warnings, setWarnings] = useState<Warning[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
 
-  const students = [
-    { id: 'STD-001', name: 'Sarah Jenkins', avatar: '👩' },
-    { id: 'STD-002', name: 'Michael Chang', avatar: '👨' },
-    { id: 'STD-003', name: 'Jessica Wong', avatar: '👩' },
-    { id: 'STD-004', name: 'David Miller', avatar: '👨' }
-  ];
+  const fetchWarnings = async (studentId: string) => {
+    setLoading(true);
+    try {
+      const studentWarnings = await getStudentWarnings(studentId);
+      setWarnings(studentWarnings);
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (selectedStudent) {
+      fetchWarnings(selectedStudent.student_id);
+    }
+  }, [selectedStudent]);
+
+  const handleIssueWarning = async () => {
+    if (selectedStudent && severity && title && description) {
+      setIsSubmitting(true);
+      try {
+        await issueWarning({
+          student_id: selectedStudent.student_id,
+          level: severity,
+          title,
+          remark: description,
+          status: WarningStatus.ACTIVE,
+          mentor_id: '' // This will be set by the backend
+        });
+        toast.success('Warning issued successfully!');
+        await fetchWarnings(selectedStudent.student_id);
+        // Reset
+        setSelectedStudent(null);
+        setSeverity(WarningLevel.LOW);
+        setTitle('');
+        setDescription('');
+      } catch (error) {
+        console.error(error);
+        toast.error('Failed to issue warning.');
+      } finally {
+        setIsSubmitting(false)
+      }
+    }
+  };
+
+  const handleCancel = () => {
+    setSelectedStudent(null);
+    setSeverity(WarningLevel.LOW);
+    setTitle('');
+    setDescription('');
+    setWarnings([]);
+  };
 
   const severityLevels = [
     {
-      level: 'low',
+      level: WarningLevel.LOW,
       icon: '⚠️',
       color: 'border-yellow-200 hover:border-yellow-400',
       bgColor: 'bg-yellow-50',
@@ -28,7 +84,7 @@ const Warnings = () => {
       description: 'Minor behavioral or attendance issue. Does not affect final grade immediately.'
     },
     {
-      level: 'medium',
+      level: WarningLevel.MEDIUM,
       icon: '⚠️',
       color: 'border-orange-200 hover:border-orange-400',
       bgColor: 'bg-orange-50',
@@ -38,7 +94,7 @@ const Warnings = () => {
       description: 'Repeated violations or missed deadlines. Requires acknowledgement from student.'
     },
     {
-      level: 'high',
+      level: WarningLevel.HIGH,
       icon: '🛑',
       color: 'border-red-200 hover:border-red-400',
       bgColor: 'bg-red-50',
@@ -49,34 +105,13 @@ const Warnings = () => {
     }
   ];
 
-  const handleIssueWarning = () => {
-    if (selectedStudent && severity && title && description) {
-      console.log({
-        student: selectedStudent,
-        severity,
-        title,
-        description
-      });
-      // Reset
-      setSelectedStudent('');
-      setSeverity('');
-      setTitle('');
-      setDescription('');
-    }
-  };
-
-  const handleCancel = () => {
-    setSelectedStudent('');
-    setSeverity('');
-    setTitle('');
-    setDescription('');
-  };
-
-  const selectedStudentData = students.find(s => s.id === selectedStudent);
+  const filteredStudents = (students || []).filter(student =>
+    student.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    student.student_id.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Header */}
       <div className="bg-white border-b border-gray-200">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 py-4 sm:py-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
@@ -86,12 +121,6 @@ const Warnings = () => {
             </p>
           </div>
           <div className="flex gap-2 sm:gap-3">
-            <button className="flex items-center justify-center gap-2 px-4 py-2 text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50 text-sm sm:text-base">
-              <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-              Warning History
-            </button>
             <button className="flex items-center justify-center gap-2 px-4 py-2 text-blue-700 bg-blue-50 border border-blue-200 rounded-lg hover:bg-blue-100 text-sm sm:text-base">
               <HelpCircle size={16} className="sm:w-[18px] sm:h-[18px]" />
               Help & Guidelines
@@ -100,127 +129,52 @@ const Warnings = () => {
         </div>
       </div>
 
-      {/* Form */}
       <div className="max-w-5xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
-        <div className="bg-white rounded-lg border border-gray-200 p-4 sm:p-6 lg:p-8 space-y-6">
-
-          {/* Student Selection */}
-          <div>
-            <label className="block text-sm font-medium text-gray-900 mb-2">
-              Select Student <span className="text-red-500">*</span>
-            </label>
-            <div className="relative">
-              <button
-                onClick={() => setIsStudentDropdownOpen(!isStudentDropdownOpen)}
-                className="w-full flex items-center justify-between px-3 sm:px-4 py-2 sm:py-3 border border-gray-300 rounded-lg bg-white hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm sm:text-base"
-              >
-                <span className={selectedStudent ? 'text-gray-900' : 'text-gray-500'}>
-                  {selectedStudentData ? `${selectedStudentData.name} (${selectedStudentData.id})` : 'Select a student...'}
-                </span>
-                <ChevronDown size={18} className="sm:w-5 sm:h-5 text-gray-400 flex-shrink-0" />
-              </button>
-              {isStudentDropdownOpen && (
-                <div className="absolute z-10 w-full mt-2 bg-white border border-gray-200 rounded-lg shadow-lg max-h-64 overflow-y-auto">
-                  {students.map((student) => (
-                    <button
-                      key={student.id}
-                      onClick={() => {
-                        setSelectedStudent(student.id);
-                        setIsStudentDropdownOpen(false);
-                      }}
-                      className="w-full flex items-center gap-3 p-3 hover:bg-gray-50 first:rounded-t-lg last:rounded-b-lg"
-                    >
-                      <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gray-200 rounded-full flex items-center justify-center flex-shrink-0">
-                        {student.avatar}
-                      </div>
-                      <div className="text-left flex-1 min-w-0">
-                        <div className="font-medium text-gray-900 text-sm sm:text-base truncate">{student.name}</div>
-                        <div className="text-xs sm:text-sm text-gray-500">ID: {student.id}</div>
-                      </div>
-                    </button>
-                  ))}
+        <WarningForm
+          students={filteredStudents}
+          selectedStudent={selectedStudent}
+          setSelectedStudent={setSelectedStudent}
+          severity={severity}
+          setSeverity={setSeverity}
+          title={title}
+          setTitle={setTitle}
+          description={description}
+          setDescription={setDescription}
+          isSubmitting={isSubmitting}
+          handleIssueWarning={handleIssueWarning}
+          handleCancel={handleCancel}
+          isStudentDropdownOpen={isStudentDropdownOpen}
+          setIsStudentDropdownOpen={setIsStudentDropdownOpen}
+          severityLevels={severityLevels}
+          searchTerm={searchTerm}
+          setSearchTerm={setSearchTerm}
+        />
+        {selectedStudent && (
+          <div className="mt-8">
+            <h2 className="text-lg font-bold text-gray-900 mb-4">
+              Warnings for {selectedStudent?.name}
+            </h2>
+            <div className="bg-white rounded-lg border border-gray-200 p-4 sm:p-6 lg:p-8 space-y-6">
+              {loading && warnings.length === 0 ? (
+                <div className="flex justify-center">
+                  <Loader2 className="animate-spin" />
+                </div>
+              ) : warnings.length > 0 ? (
+                warnings.map((warning) => (
+                  <div key={warning.id}>
+                    <p>{warning.title}</p>
+                    <p>{warning.remark}</p>
+                    <p>{warning.level}</p>
+                  </div>
+                ))
+              ) : (
+                <div className="text-center text-gray-500">
+                  No warnings found for this student.
                 </div>
               )}
             </div>
           </div>
-
-          {/* Severity */}
-          <div>
-            <label className="block text-sm font-medium text-gray-900 mb-2">
-              Severity Level <span className="text-red-500">*</span>
-            </label>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
-              {severityLevels.map((level) => (
-                <button
-                  key={level.level}
-                  onClick={() => setSeverity(level.level)}
-                  className={`p-4 sm:p-5 border-2 rounded-lg text-left transition-all ${
-                    severity === level.level
-                      ? `${level.bgColor} ${level.color.replace('hover:', '')}`
-                      : `${level.color} bg-white`
-                  }`}
-                >
-                  <div className={`w-8 h-8 sm:w-10 sm:h-10 ${level.iconBg} rounded-lg flex items-center justify-center mb-3`}>
-                    <span className="text-lg sm:text-2xl">{level.icon}</span>
-                  </div>
-                  <h3 className="font-semibold text-gray-900 mb-1 text-sm sm:text-base">{level.title}</h3>
-                  <p className="text-xs sm:text-sm text-gray-600">{level.description}</p>
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Title */}
-          <div>
-            <label className="block text-sm font-medium text-gray-900 mb-2">
-              Warning Title <span className="text-red-500">*</span>
-            </label>
-            <input
-              type="text"
-              placeholder="Brief summary of the warning"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              className="w-full px-3 sm:px-4 py-2 sm:py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm sm:text-base"
-            />
-          </div>
-
-          {/* Description */}
-          <div>
-            <label className="block text-sm font-medium text-gray-900 mb-2">
-              Description <span className="text-red-500">*</span>
-            </label>
-            <textarea
-              placeholder="Provide details of the incident and expected corrective behavior..."
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              rows={6}
-              className="w-full px-3 sm:px-4 py-2 sm:py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none text-sm sm:text-base"
-            />
-          </div>
-
-          {/* Actions */}
-          <div className="flex flex-col sm:flex-row items-stretch sm:items-center sm:justify-between gap-3 pt-6 border-t border-gray-200">
-            <button
-              onClick={handleCancel}
-              className="px-6 py-2 text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50 text-sm sm:text-base order-2 sm:order-1"
-            >
-              Cancel
-            </button>
-            <button
-              onClick={handleIssueWarning}
-              disabled={!selectedStudent || !severity || !title || !description}
-              className={`px-6 py-2 rounded-lg flex items-center justify-center gap-2 text-sm sm:text-base order-1 sm:order-2 ${
-                selectedStudent && severity && title && description
-                  ? 'bg-red-600 text-white hover:bg-red-700'
-                  : 'bg-gray-300 text-gray-500 cursor-not-allowed'
-              }`}
-            >
-              <AlertCircle size={16} className="sm:w-[18px] sm:h-[18px]" />
-              Issue Warning
-            </button>
-          </div>
-
-        </div>
+        )}
       </div>
     </div>
   );

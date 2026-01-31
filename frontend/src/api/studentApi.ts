@@ -10,8 +10,13 @@ export const getAssignTasks = async () => {
   return res.data;
 };
 
-export const submitTask = async (taskId:string, link:string) => {
+export const submitTask = async (
+  taskId: string,
+  studentId: string,
+  link: string
+) => {
   const res = await api.post(`/students/tasks/${taskId}/submit`, {
+    student_id: studentId,
     github_link: link,
   });
   return res.data;
@@ -32,7 +37,7 @@ export const getStudentNotifications = async () => {
   return res.data;
 };
 
-export const markAsRead = async (notificationId:string) => {
+export const markAsRead = async (notificationId: string) => {
   const res = await api.put(`/notifications/${notificationId}/read`);
   return res.data;
 };
