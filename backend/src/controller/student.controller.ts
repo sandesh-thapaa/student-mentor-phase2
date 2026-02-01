@@ -134,3 +134,46 @@ export const getStudentProgress = async (
   }
 };
 
+
+
+export const resolveWarning = async (
+  req: AuthRequest,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const userId = req.user?.user_id;
+    const { warningId } = req.params;
+    const { comment } = req.body;
+
+    if (!warningId) {
+       throw new AppError("Warning ID is required", 400);
+    }
+
+    if (!userId) {
+      throw new AppError("User not authenticated", 401);
+    }
+
+    if (req.user.role !== "STUDENT") {
+      throw new AppError("Access denied. Students only.", 403);
+    }
+
+    const updatedWarning = await studentService.resolveWarningService(
+      userId,
+      warningId,
+      comment
+    );
+
+    res.status(200).json({
+      message: "Warning resolved successfully",
+      warning: updatedWarning,
+    });
+  } catch (error: any) {
+    next(
+      new AppError(
+        error.message || "Failed to resolve warning",
+        error.statusCode || 500
+      )
+    );
+  }
+};

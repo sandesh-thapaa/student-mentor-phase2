@@ -20,8 +20,7 @@ app.use("/auth", authRouter);
 app.use("/mentors", mentorRouter);
 app.use("/students", studentRouter);
 app.use("/warnings", warningRouter);
-app.use('/auth', authRouter);
-app.use('/mentors', mentorRouter);
+
 app.use('/tasks', taskRouter);
 app.use('/notifications', notificationRouter);
 

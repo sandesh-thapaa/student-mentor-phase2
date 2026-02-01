@@ -4,6 +4,7 @@ import { WarningLevel, WarningStatus } from "@prisma/client";
 
 interface IssueWarningPayload {
   student_id: string;
+  title: string;
   remark: string;
   title: string;
   level: WarningLevel;

@@ -283,3 +283,65 @@ export const getStudentProgressService = async (studentId: string) => {
   };
 };
 
+
+
+export const resolveWarningService = async (
+  studentId: string,
+  warningId: string,
+  comment: string
+) => {
+  if (!studentId) {
+    throw new AppError("Student ID is required", 400);
+  }
+  if (!warningId) {
+    throw new AppError("Warning ID is required", 400);
+  }
+  if (!comment) {
+    throw new AppError("Comment is required to resolve warning", 400);
+  }
+
+  const warning = await prisma.warning.findUnique({
+    where: { id: warningId },
+  });
+
+  if (!warning) {
+    throw new AppError("Warning not found", 404);
+  }
+
+  if (warning.student_id !== studentId) {
+    throw new AppError("You are not authorized to resolve this warning", 403);
+  }
+
+  if (warning.status === "RESOLVED") {
+    throw new AppError("Warning is already resolved", 400);
+  }
+
+  const updatedWarning = await prisma.warning.update({
+    where: { id: warningId },
+    data: {
+      status: "RESOLVED",
+      student_comment: comment,
+      resolvedAt: new Date(),
+    },
+  });
+
+  // Check if all warnings are resolved to update student status
+  const activeWarningsCount = await prisma.warning.count({
+    where: {
+      student_id: studentId,
+      status: "ACTIVE",
+    },
+  });
+
+  // If no active warnings, clear the warning status on the student
+  if (activeWarningsCount === 0) {
+    await prisma.student.update({
+      where: { student_id: studentId },
+      data: {
+        warning_status: null,
+      },
+    });
+  }
+
+  return updatedWarning;
+};
