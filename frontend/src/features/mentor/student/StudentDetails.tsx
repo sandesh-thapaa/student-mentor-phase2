@@ -9,16 +9,15 @@ import {
   Trash2,
   X,
 } from "lucide-react";
-import {
-  getMentorStudents,
-  updateStudent,
-  deleteStudent,
-} from "../../../api/mentorApi";
+import { useMentor } from "../../../context/MentorContext";
+import { getMentorStudents, updateStudent } from "../../../api/mentorApi";
 import type { Student } from "../types";
+import toast from "react-hot-toast";
 
 const StudentDetails = () => {
   const { studentId } = useParams<{ studentId: string }>();
   const navigate = useNavigate();
+  const { deleteStudentAction } = useMentor();
 
   const [student, setStudent] = useState<Student | null>(null);
   const [loading, setLoading] = useState(true);
@@ -69,10 +68,10 @@ const StudentDetails = () => {
       const updated = await updateStudent(student.student_id, updatedData);
       setStudent(updated);
       setShowEditModal(false);
-      alert("Student details updated successfully!");
+      toast.success("Student details updated successfully!");
     } catch (err) {
       console.error("Failed to update student", err);
-      alert("Failed to update student. Please try again.");
+      toast.error("Failed to update student. Please try again.");
     } finally {
       setIsSubmitting(false);
     }
@@ -82,16 +81,15 @@ const StudentDetails = () => {
     if (!student) return;
     setIsSubmitting(true);
     try {
-      await deleteStudent(student.student_id);
+      await deleteStudentAction(student.student_id);
+      toast.success("Student deleted successfully!");
       setShowDeleteModal(false);
-      alert("Delete functionality is not available yet. This is a placeholder.");
-      // Once backend is ready, navigate back to the students list:
-      // navigate("/mentor/students");
+      navigate("/mentor/students");
     } catch (err) {
       console.error("Failed to delete student", err);
+      toast.error("Failed to delete student.");
     } finally {
       setIsSubmitting(false);
-      setShowDeleteModal(false);
     }
   };
 

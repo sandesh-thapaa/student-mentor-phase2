@@ -21,6 +21,7 @@ import {
   getStudentNotifications,
   markAsRead,
   markAsReadAll,
+  resolveWarning,
 } from "../api/studentApi";
 import toast from "react-hot-toast";
 import type { WarningsResponse } from "../features/auth/types/warning";
@@ -46,6 +47,7 @@ type StudentContextType = {
     studentId: string,
     link: string
   ) => Promise<void>;
+  resolveWarningAction: (warningId: string, comment: string) => Promise<void>;
   markNotificationAsRead: (notificationId: string) => Promise<void>;
   markAllNotificationsAsRead: () => Promise<void>;
 };
@@ -169,6 +171,22 @@ export const StudentProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
+  const resolveWarningAction = async (
+    warningId: string,
+    comment: string
+  ): Promise<void> => {
+    try {
+      await resolveWarning(warningId, comment);
+      await fetchStudentWarnings();
+      toast.success("Warning resolved successfully!");
+    } catch (err: unknown) {
+      console.error("Failed to resolve warning:", err);
+      const errorMessage = err instanceof Error ? err.message : "Failed to resolve warning";
+      toast.error(errorMessage);
+      throw err;
+    }
+  };
+
   useEffect(() => {
     if (authUser) {
       studentDashboard();
@@ -199,6 +217,7 @@ export const StudentProvider = ({ children }: { children: ReactNode }) => {
         fetchStudentWarnings,
         fetchNotifications,
         submitStudentTask,
+        resolveWarningAction,
         markNotificationAsRead,
         markAllNotificationsAsRead,
       }}

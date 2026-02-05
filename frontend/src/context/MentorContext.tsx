@@ -14,6 +14,9 @@ import {
   assignTaskToStudent,
   createStudent,
   updateStudent,
+  deleteStudent,
+  getMentorAssignments,
+  reviewAssignment,
 } from "../api/mentorApi";
 import { createTask, getAllTasks, getTask, reviewTask } from "../api/taskApi";
 import { issueWarning as apiIssueWarning, getStudentWarnings } from "../api/warningApi";
@@ -27,6 +30,7 @@ import {
   type Mentor,
   type Student,
   type Task,
+  type TaskAssignment,
   TaskStatus,
   type Notification,
   type Warning,
@@ -38,12 +42,15 @@ type MentorContextType = {
   students: Student[] | null;
   notifications: Notification[] | null;
   selectedStudent: Student | null;
+  assignments: TaskAssignment[] | null;
   loading: boolean;
   fetchMentorDashboard: () => Promise<void>;
   fetchStudents: () => Promise<void>;
   fetchNotifications: () => Promise<void>;
   fetchStudentDetails: (id: string) => Promise<void>;
+  fetchAssignments: () => Promise<void>;
   assignNewTask: (studentId: string, taskId: string) => Promise<void>;
+  deleteStudentAction: (studentId: string) => Promise<void>;
   issueWarning: (
     studentId: string,
     remark: string,
@@ -54,6 +61,11 @@ type MentorContextType = {
     taskId: string,
     status: TaskStatus,
     feedback: string
+  ) => Promise<void>;
+  reviewAssignmentAction: (
+    assignmentId: string,
+    status: TaskAssignment["status"],
+    mentorRemark: string
   ) => Promise<void>;
   createNewStudent: (
     studentData: Omit<
@@ -85,6 +97,7 @@ export const MentorProvider = ({ children }: { children: ReactNode }) => {
   const [students, setStudents] = useState<Student[] | null>(null);
   const [notifications, setNotifications] = useState<Notification[] | null>(null);
   const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
+  const [assignments, setAssignments] = useState<TaskAssignment[] | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
 
   const { authUser } = useAuth();
@@ -127,6 +140,19 @@ export const MentorProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
+  const fetchAssignments = async () => {
+    setLoading(true);
+    try {
+      const response = await getMentorAssignments();
+      setAssignments(response);
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to fetch assignments.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const fetchStudentDetails = async (id: string) => {
     setLoading(true);
     try {
@@ -153,6 +179,18 @@ export const MentorProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
+  const deleteStudentAction = async (studentId: string) => {
+    try {
+      await deleteStudent(studentId);
+      toast.success("Student deleted successfully.");
+      await fetchStudents(); // Refresh student list
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to delete student.");
+      throw err;
+    }
+  };
+
   const issueWarning = async (studentId: string, remark: string, title: string, level: WarningLevel) => {
     try {
       await apiIssueWarning(studentId, remark, title, level);
@@ -172,6 +210,22 @@ export const MentorProvider = ({ children }: { children: ReactNode }) => {
     } catch (err) {
       console.error(err);
       toast.error("Failed to review task.");
+      throw err;
+    }
+  };
+
+  const reviewAssignmentAction = async (
+    assignmentId: string,
+    status: TaskAssignment["status"],
+    mentorRemark: string
+  ) => {
+    try {
+      await reviewAssignment(assignmentId, status, mentorRemark);
+      toast.success(`Assignment marked as ${status}.`);
+      await fetchAssignments(); // Refresh assignments list
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to review assignment.");
       throw err;
     }
   };
@@ -250,14 +304,18 @@ export const MentorProvider = ({ children }: { children: ReactNode }) => {
         students,
         notifications,
         selectedStudent,
+        assignments,
         loading,
         fetchMentorDashboard,
         fetchStudents,
         fetchNotifications,
         fetchStudentDetails,
+        fetchAssignments,
         assignNewTask,
+        deleteStudentAction,
         issueWarning,
         reviewTaskAction,
+        reviewAssignmentAction,
         createNewStudent,
         updateStudentDetails,
         createNewTask,

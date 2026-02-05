@@ -40,8 +40,8 @@ export const sendNotification = async (
        return
     }
 
-    // Default to SYSTEM_ANNOUNCEMENT if type is invalid or missing, though proper validation is better
-    const notificationType = (type as NotificationType) || NotificationType.SYSTEM_ANNOUNCEMENT;
+    // Default to MENTOR_MESSAGE if type is invalid or missing, since only mentors can send notifications
+    const notificationType = (type as NotificationType) || NotificationType.MENTOR_MESSAGE;
 
     const notification = await notificationService.createNotification(
       userId,

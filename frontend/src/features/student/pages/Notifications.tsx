@@ -12,7 +12,7 @@ import moment from "moment";
 
 const Notifications: React.FC = () => {
   const [activeTab, setActiveTab] = useState<
-    "all" | "unread" | "read" | "system"
+    "all" | "unread" | "read"
   >("all");
 
   const {
@@ -55,7 +55,6 @@ const Notifications: React.FC = () => {
     if (activeTab === "all") return true;
     if (activeTab === "unread") return !isActuallyRead;
     if (activeTab === "read") return isActuallyRead;
-    if (activeTab === "system") return n.type === "SYSTEM_ANNOUNCEMENT";
     return true;
   });
 
@@ -86,7 +85,7 @@ const Notifications: React.FC = () => {
         </div>
 
         <div className="flex gap-6 border-b border-gray-200 mb-6 overflow-x-auto">
-          {(["all", "unread", "read", "system"] as const).map((tab) => {
+          {(["all", "unread", "read"] as const).map((tab) => {
             // ok, fix for the badge counter
             const unreadItemsCount = (notifications ?? []).filter(
               (n) => !(n.isRead === true || !!n.readAt)
@@ -122,7 +121,6 @@ const Notifications: React.FC = () => {
               <NotificationCard
                 key={n.id}
                 icon={iconMap[n.type] ?? <Bell size={18} />}
-                title={n.type ? n.type.replace(/_/g, " ") : "Notification"}
                 description={n.message}
                 time={moment(n.createdAt).fromNow()}
                 // ok, fix for the card highlight
@@ -144,7 +142,6 @@ const Notifications: React.FC = () => {
 
 interface NotificationCardProps {
   icon: React.ReactNode;
-  title: string;
   description: string;
   time: string;
   highlight: boolean;
@@ -154,7 +151,6 @@ interface NotificationCardProps {
 
 const NotificationCard: React.FC<NotificationCardProps> = ({
   icon,
-  title,
   description,
   time,
   highlight,
@@ -177,9 +173,6 @@ const NotificationCard: React.FC<NotificationCardProps> = ({
           {icon}
         </div>
         <div>
-          <h3 className="font-bold text-gray-900 mb-1 capitalize text-sm">
-            {title.toLowerCase()}
-          </h3>
           <p className="text-gray-600 text-sm">{description}</p>
         </div>
       </div>

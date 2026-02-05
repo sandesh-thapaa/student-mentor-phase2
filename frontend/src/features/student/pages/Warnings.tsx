@@ -1,17 +1,66 @@
-import React from "react";
-import { AlertCircle, Calendar, User, CheckCircle } from "lucide-react";
+import React, { useState } from "react";
+import { AlertCircle, Calendar, User, CheckCircle, X } from "lucide-react";
 import { useStudent } from "../../../context/StudentContext";
 import moment from "moment";
 import type { Warning, WarningsResponse } from "../../auth/types/warning";
 
+interface ResolveModalState {
+  isOpen: boolean;
+  warningId: string | null;
+  comment: string;
+  isSubmitting: boolean;
+}
+
 const StudentWarnings: React.FC = () => {
-  const { warning } = useStudent();
+  const { warning, resolveWarningAction } = useStudent();
+  const [modalState, setModalState] = useState<ResolveModalState>({
+    isOpen: false,
+    warningId: null,
+    comment: "",
+    isSubmitting: false,
+  });
+
   const data = warning as unknown as WarningsResponse;
 
   const activeWarnings =
     data?.warnings?.filter((w: Warning) => w.status === "ACTIVE") || [];
   const resolvedWarnings =
     data?.warnings?.filter((w: Warning) => w.status === "RESOLVED") || [];
+
+  const handleOpenModal = (warningId: string): void => {
+    setModalState({
+      isOpen: true,
+      warningId,
+      comment: "",
+      isSubmitting: false,
+    });
+  };
+
+  const handleCloseModal = (): void => {
+    setModalState({
+      isOpen: false,
+      warningId: null,
+      comment: "",
+      isSubmitting: false,
+    });
+  };
+
+  const handleResolveWarning = async (): Promise<void> => {
+    if (!modalState.warningId || !modalState.comment.trim()) {
+      return;
+    }
+
+    setModalState((prev) => ({ ...prev, isSubmitting: true }));
+
+    try {
+      await resolveWarningAction(modalState.warningId, modalState.comment);
+      handleCloseModal();
+    } catch (err) {
+      console.error("Failed to resolve warning:", err);
+    } finally {
+      setModalState((prev) => ({ ...prev, isSubmitting: false }));
+    }
+  };
 
   return (
     <div className="bg-gray-50 p-4 md:p-8 min-h-screen">
@@ -77,6 +126,12 @@ const StudentWarnings: React.FC = () => {
                       </div>
                     </div>
                   </div>
+                  <button
+                    onClick={() => handleOpenModal(w.id)}
+                    className="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors whitespace-nowrap"
+                  >
+                    Resolve
+                  </button>
                 </div>
               </div>
             ))
@@ -129,6 +184,66 @@ const StudentWarnings: React.FC = () => {
           </section>
         )}
       </div>
+
+      {/* Resolve Modal */}
+      {modalState.isOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full">
+            <div className="flex items-center justify-between p-6 border-b border-gray-200">
+              <h3 className="text-lg font-bold text-gray-900">
+                Resolve Warning
+              </h3>
+              <button
+                onClick={handleCloseModal}
+                disabled={modalState.isSubmitting}
+                className="text-gray-400 hover:text-gray-600 transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="p-6 space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Comment
+                </label>
+                <textarea
+                  value={modalState.comment}
+                  onChange={(e) =>
+                    setModalState((prev) => ({
+                      ...prev,
+                      comment: e.target.value,
+                    }))
+                  }
+                  disabled={modalState.isSubmitting}
+                  placeholder="Please explain how you've addressed this warning..."
+                  rows={4}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none resize-none disabled:bg-gray-50"
+                />
+              </div>
+
+              <div className="flex gap-3 pt-4">
+                <button
+                  onClick={handleCloseModal}
+                  disabled={modalState.isSubmitting}
+                  className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 font-medium rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleResolveWarning}
+                  disabled={
+                    modalState.isSubmitting || !modalState.comment.trim()
+                  }
+                  className="flex-1 px-4 py-2 bg-green-600 text-white font-medium rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {modalState.isSubmitting ? "Resolving..." : "Resolve"}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

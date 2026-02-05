@@ -46,3 +46,13 @@ export const markAsReadAll = async () => {
   const res = await api.put("/notifications/read/all");
   return res.data;
 };
+
+export const resolveWarning = async (
+  warningId: string,
+  comment: string
+): Promise<{ message: string; warning: Record<string, unknown> }> => {
+  const res = await api.patch(`/students/warnings/${warningId}/resolve`, {
+    comment,
+  });
+  return res.data;
+};

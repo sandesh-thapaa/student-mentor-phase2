@@ -43,6 +43,9 @@ const SkeletonDetails = () => (
 
 const CourseModulePage: React.FC = () => {
   const [selectedTask, setSelectedTask] = useState<string>();
+  const [taskFilterTab, setTaskFilterTab] = useState<
+    "all" | "pending" | "submitted" | "rejected"
+  >("all");
   const [currentSection, setCurrentSection] = useState<
     "overview" | "progress" | "warnings" | "notifications"
   >("overview");
@@ -60,6 +63,20 @@ const CourseModulePage: React.FC = () => {
   const { authUser } = useAuth();
 
   const activeTask = tasks?.find((t) => t.task_id === selectedTask);
+
+  // Filter tasks by status
+  const pendingTasks = tasks?.filter((t) => t.status === "PENDING") || [];
+  const submittedTasks = tasks?.filter((t) => t.status === "SUBMITTED") || [];
+  const rejectedTasks = tasks?.filter((t) => t.status === "REJECTED") || [];
+  const approvedTasks = tasks?.filter((t) => t.status === "APPROVED") || [];
+
+  const filteredTasks = (() => {
+    if (taskFilterTab === "all") return tasks || [];
+    if (taskFilterTab === "pending") return pendingTasks;
+    if (taskFilterTab === "submitted") return submittedTasks;
+    if (taskFilterTab === "rejected") return rejectedTasks;
+    return tasks || [];
+  })();
 
   // Getting the live link from the first course in the progress report
   const liveClassLink = progressReport?.courses?.[0]?.url;
@@ -179,11 +196,52 @@ const CourseModulePage: React.FC = () => {
               </div>
 
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                {/* Left: Task List */}
+                {/* Left: Task List with Tabs */}
                 <div>
-                  <h2 className="text-2xl font-bold text-gray-900 mb-4">
-                    Task List
+                  <h2 className="text-2xl font-bold text-gray-900 mb-6">
+                    My Tasks
                   </h2>
+
+                  {/* Tabs */}
+                  <div className="flex gap-4 border-b border-gray-200 mb-6 overflow-x-auto">
+                    {(["all", "pending", "submitted", "rejected"] as const).map(
+                      (tab) => {
+                        const counts = {
+                          all: tasks?.length || 0,
+                          pending: pendingTasks.length,
+                          submitted: submittedTasks.length,
+                          rejected: rejectedTasks.length,
+                        };
+
+                        return (
+                          <button
+                            key={tab}
+                            onClick={() => setTaskFilterTab(tab)}
+                            className={`pb-3 font-medium capitalize whitespace-nowrap relative ${
+                              taskFilterTab === tab
+                                ? "text-indigo-600"
+                                : "text-gray-600 hover:text-gray-900"
+                            }`}
+                          >
+                            {tab === "all" && "All Tasks"}
+                            {tab === "pending" && "Pending"}
+                            {tab === "submitted" && "Submitted"}
+                              {tab === "rejected" && "Rejected"}
+                            {counts[tab] > 0 && (
+                              <span className="ml-2 px-2 py-0.5 bg-indigo-100 text-indigo-600 text-xs rounded-full">
+                                {counts[tab]}
+                              </span>
+                            )}
+                            {taskFilterTab === tab && (
+                              <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-indigo-600" />
+                            )}
+                          </button>
+                        );
+                      }
+                    )}
+                  </div>
+
+                  {/* Task List */}
                   <div className="space-y-3">
                     {tasksLoading ? (
                       <>
@@ -191,8 +249,8 @@ const CourseModulePage: React.FC = () => {
                         <SkeletonTask />
                         <SkeletonTask />
                       </>
-                    ) : (
-                      tasks?.map((task) => (
+                    ) : filteredTasks.length > 0 ? (
+                      filteredTasks.map((task) => (
                         <button
                           key={task.task_id}
                           onClick={() => handleTaskClick(task.task_id)}
@@ -220,6 +278,13 @@ const CourseModulePage: React.FC = () => {
                           </div>
                         </button>
                       ))
+                    ) : (
+                      <div className="text-center py-12 bg-white rounded-xl border border-dashed border-gray-200">
+                        <p className="text-gray-400">
+                          No {taskFilterTab === "all" ? "" : taskFilterTab} tasks
+                          found.
+                        </p>
+                      </div>
                     )}
                   </div>
                 </div>
@@ -245,6 +310,29 @@ const CourseModulePage: React.FC = () => {
                         <p className="text-gray-600 leading-relaxed mb-6">
                           {activeTask.task.description}
                         </p>
+
+                        {activeTask.mentor_remark && (
+                          <div className={`rounded-lg p-4 mb-6 border-l-4 ${
+                            activeTask.status === "REJECTED"
+                              ? "bg-red-50 border-red-500"
+                              : "bg-blue-50 border-blue-500"
+                          }`}>
+                            <p className={`text-sm font-semibold mb-2 ${
+                              activeTask.status === "REJECTED"
+                                ? "text-red-900"
+                                : "text-blue-900"
+                            }`}>
+                              {activeTask.status === "REJECTED" ? "Rejection Feedback" : "Mentor Feedback"}
+                            </p>
+                            <p className={`text-sm ${
+                              activeTask.status === "REJECTED"
+                                ? "text-red-800"
+                                : "text-blue-800"
+                            }`}>
+                              {activeTask.mentor_remark}
+                            </p>
+                          </div>
+                        )}
 
                         <div className="border-t border-gray-200 pt-6">
                           {activeTask.status === "PENDING" || activeTask.status === "REJECTED" ? (

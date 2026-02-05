@@ -1,46 +1,53 @@
 import { useState, useEffect } from "react";
 import { Github, ExternalLink, MessageSquare, Check, RotateCcw, Search, Loader2 } from "lucide-react";
 import { reviewTask } from "../../../api/taskApi";
-import { getMentorStudents } from "../../../api/mentorApi";
+import { useMentor } from "../../../context/MentorContext";
 import { type TaskAssignment, TaskStatus } from "../types";
+import toast from "react-hot-toast";
 
 const TaskReview = () => {
+  const { assignments, fetchAssignments, reviewAssignmentAction, loading: ctxLoading } = useMentor();
   const [submissions, setSubmissions] = useState<TaskAssignment[]>([]);
   const [loading, setLoading] = useState(false);
   const [feedback, setFeedback] = useState("");
   const [selectedTask, setSelectedTask] = useState<TaskAssignment | null>(null);
 
   useEffect(() => {
-    const fetchSubmissions = async () => {
+    const loadAssignments = async () => {
       setLoading(true);
       try {
-        const students = await getMentorStudents();
-        const allSubmissions = students.flatMap(student => 
-          student.assignments?.filter(a => a.status === TaskStatus.SUBMITTED) || []
-        );
-        setSubmissions(allSubmissions);
+        await fetchAssignments();
       } catch (err) {
-        console.error("Failed to fetch submissions", err);
-        toast.error("Failed to fetch submissions");
+        console.error("Failed to fetch assignments", err);
+        toast.error("Failed to fetch assignments");
       } finally {
         setLoading(false);
       }
     };
-    fetchSubmissions();
+    loadAssignments();
   }, []);
+
+  useEffect(() => {
+    if (assignments) {
+      const pendingAssignments = assignments.filter(
+        (a) => a.status === TaskStatus.SUBMITTED
+      );
+      setSubmissions(pendingAssignments);
+    }
+  }, [assignments]);
 
   const handleReview = async (status: TaskStatus) => {
     if (!selectedTask || !feedback) return alert("Please select a task and add feedback. ok.");
     
     setLoading(true);
     try {
-      await reviewTask(selectedTask.id, { status, mentor_remark: feedback });
-      alert(`Task ${status === TaskStatus.APPROVED ? 'Approved' : 'Changes Requested'} successfully!`);
+      await reviewAssignmentAction(selectedTask.id, status, feedback);
       setSubmissions(submissions.filter(s => s.id !== selectedTask.id));
       setSelectedTask(null);
       setFeedback("");
     } catch (err) {
       console.error("Review failed", err);
+      toast.error("Failed to review assignment.");
     } finally {
       setLoading(false);
     }

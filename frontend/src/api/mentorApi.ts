@@ -17,13 +17,7 @@ export const getMentorStudents = async (): Promise<Student[]> => {
 
 
 export const deleteStudent = async (studentId: string): Promise<void> => {
-  console.log(
-    `deleteStudent called for ${studentId}, but no backend endpoint exists.`
-  );
-  // When the backend endpoint is available, the following line can be used:
-  // const res = await api.delete(`/mentors/students/${studentId}`);
-  // return res.data;
-  return Promise.resolve();
+  await api.delete(`/mentors/students/${studentId}`);
 };
 
 export const assignTaskToStudent = async (
@@ -83,5 +77,22 @@ export const updateStudent = async (studentId: string, studentData: Partial<Stud
 export const getStudentProfile = async (studentId: string): Promise<Student> => {
   const res = await api.get(`/mentors/students/${studentId}`);
   return res.data.student || res.data;
+};
+
+export const getMentorAssignments = async (): Promise<TaskAssignment[]> => {
+  const res = await api.get("/mentors/assignments");
+  return res.data.assignments || res.data;
+};
+
+export const reviewAssignment = async (
+  assignmentId: string,
+  status: TaskAssignment["status"],
+  mentorRemark: string
+): Promise<TaskAssignment> => {
+  const res = await api.post(`/mentors/assignments/${assignmentId}/review`, {
+    status,
+    remark: mentorRemark,
+  });
+  return res.data;
 };
 
