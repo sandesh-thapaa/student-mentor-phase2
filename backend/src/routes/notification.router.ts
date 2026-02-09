@@ -1,5 +1,10 @@
 import { Router } from "express";
-import { getNotifications, sendNotification } from "../controller/notification.controller";
+import {
+    getNotifications,
+    sendNotification,
+    markAsReadController,
+    markAllAsReadController
+} from "../controller/notification.controller";
 import { protect, restrictTo } from "../middleware/auth.middleware";
 
 const router = Router();
@@ -7,6 +12,8 @@ const router = Router();
 router.use(protect);
 
 router.get("/", getNotifications);
-router.post("/", restrictTo('MENTOR'), sendNotification); 
+router.post("/", restrictTo('MENTOR'), sendNotification);
+router.put("/read/all", markAllAsReadController);
+router.put("/:notificationId/read", markAsReadController);
 
 export default router;

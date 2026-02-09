@@ -6,11 +6,11 @@ const router = Router();
 
 router.use(protect);
 
-router.get("/dashboard", getStudentDashboard); // fetch student dashboard
-router.get("/tasks", getStudentTasks); //fetch assigned tasks
-router.get("/progress", getStudentProgress); //fetch student progress
-router.post("/tasks/:taskId/submit", submitStudentTask); //submit task
-router.patch("/warnings/:warningId/resolve", resolveWarning); //resolve warning
+router.get("/dashboard", getStudentDashboard);
+router.get("/tasks", getStudentTasks);
+router.get("/progress", getStudentProgress);
+router.post("/tasks/:taskId/submit", submitStudentTask);
+router.patch("/warnings/:warningId/resolve", resolveWarning);
 
 export default router;
 

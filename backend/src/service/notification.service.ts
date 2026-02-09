@@ -33,3 +33,16 @@ export const markAsRead = async (notificationId: string) => {
     },
   });
 };
+
+export const markAllAsRead = async (userId: string) => {
+  return await prisma.notification.updateMany({
+    where: { 
+      user_id: userId,
+      isRead: false 
+    },
+    data: {
+      isRead: true,
+      readAt: new Date(),
+    },
+  });
+};
